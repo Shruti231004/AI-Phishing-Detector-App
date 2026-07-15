@@ -14,47 +14,7 @@ import {
   extractDomainFromEmail,
 } from './utils/webSearchVerifier';
 
-// Category-specific safe next action recommendations
-const SAFE_ACTIONS = {
-  scholarship: {
-    danger:
-      'Do NOT transfer any money or share OTP codes. Official scholarships never charge fees. Check scholarships.gov.in or contact the Dean office directly.',
-    warning:
-      'Verify the scholarship listing on the official college notice board before submitting any documents.',
-    safe: 'Verify that the sender email domain matches your college official domain (e.g. @vcet.edu.in).',
-  },
-  fees: {
-    danger:
-      'Halt. College accounts desks never demand fees via personal Gmail, UPI links, or PhonePe. Log into the official student ERP portal to check your ledger.',
-    warning:
-      'Call the college accounts desk directly using numbers from the official website to verify pending fees.',
-    safe: 'Normal fee update. Only pay through the official student portal payment gateway.',
-  },
-  placements: {
-    danger:
-      'Do NOT wire deposits or security fees. Legitimate placements never charge students. Report this to the Placement Officer immediately.',
-    warning:
-      'Confirm recruiter credibility by visiting the Placement Room or checking the official campus drive circular.',
-    safe: 'Verified placement communication. Prepare your resume and dress in formals as instructed.',
-  },
-  competitions: {
-    danger:
-      'Ignore the giveaway. Real events never ask for UPI PINs, OTPs, or net banking logins to credit prize money.',
-    warning:
-      'Check the student council portal or official flyers to verify if this competition exists.',
-    safe: 'Participation confirmed. Join the official event channel for schedule updates.',
-  },
-};
-
-const CATEGORY_TITLES = {
-  scholarship: 'Scholarship Phishing Console',
-  fees: 'Tuition Fee Verification Console',
-  placements: 'Placement Security Console',
-  competitions: 'Competitions & Winnings Console',
-};
-
 function App() {
-  const [activeCategory, setActiveCategory] = useState('scholarship');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [isScanning, setIsScanning] = useState(false);
@@ -74,16 +34,6 @@ function App() {
   const [actionText, setActionText] = useState('');
 
   const aiStats = classifier.getStats();
-
-  // Category switch handler
-  const handleCategoryChange = useCallback((cat) => {
-    setActiveCategory(cat);
-    setEmail('');
-    setMessage('');
-    setShowResults(false);
-    setShowTerminal(false);
-    setTerminalLogs([]);
-  }, []);
 
   // Add a log line with a delay
   const addLog = (text, type, delay) => {
@@ -109,7 +59,6 @@ function App() {
 
     // Step 1: Animated agent logs
     await addLog('🤖 [Verifier Agent] Initializing phishing dissection module...', 'active', 200);
-    await addLog(`🤖 [Verifier Agent] Category context: ${activeCategory.toUpperCase()}`, 'active', 400);
     await addLog(`🤖 [Verifier Agent] Profiling sender: "${email || 'No email provided'}"`, 'active', 400);
 
     // Step 2: Domain Registry Check
@@ -177,16 +126,29 @@ function App() {
     const compositeScore = Math.max(rulesResult.score, Math.round(aiProbPercent / 10));
     let finalVerdict = 'SAFE';
     let desc = 'No significant risk indicators or phishing patterns matched this content.';
-    let action = SAFE_ACTIONS[activeCategory]?.safe || 'No direct threats found. Maintain standard security hygiene.';
+
+    // Generate smart actions dynamically based on text analysis
+    let action = 'No direct threats found. Maintain standard security hygiene. Verify sender details manually.';
+    const lowerBody = message.toLowerCase();
+
+    if (domResult && !domResult.verified) {
+      action = `Verify sender authenticity. The sender claims to be ${domResult.org} but the email domain does not match. Contact them at their official domain: ${domResult.expectedDomains.join(', ')}.`;
+    } else if (lowerBody.includes('otp') || lowerBody.includes('password') || lowerBody.includes('pin') || lowerBody.includes('cvv')) {
+      action = 'Halt. Do NOT share OTP codes, bank PINs, CVV, or login passwords. Official institutions will never ask for credentials via email or phone.';
+    } else if (lowerBody.includes('pay') || lowerBody.includes('deposit') || lowerBody.includes('fee') || lowerBody.includes('charge')) {
+      action = 'Halt. Do NOT transfer funds or security deposits. Verify any payment or fee demands directly on the official portal or desk.';
+    } else if (lowerBody.includes('scholarship')) {
+      action = 'Verify this scholarship notice with the official Dean office notice board before submitting any files.';
+    } else if (lowerBody.includes('placement') || lowerBody.includes('interview') || lowerBody.includes('job')) {
+      action = 'Confirm recruiter credibility by visiting the Placement Room or checking the official campus drive portal.';
+    }
 
     if (compositeScore >= 6 || aiProbPercent > 75 || (domResult && !domResult.verified)) {
       finalVerdict = 'HIGH RISK';
       desc = 'Strong phishing indicators found. This message demands details or payment under artificial pressure.';
-      action = SAFE_ACTIONS[activeCategory]?.danger || 'Do not reply, open links, or input credentials.';
     } else if (compositeScore >= 3 || aiProbPercent > 35) {
       finalVerdict = 'SUSPICIOUS';
       desc = 'Some warning flags detected. Be careful before sharing details or clicking links.';
-      action = SAFE_ACTIONS[activeCategory]?.warning || 'Verify the sender independently before taking action.';
     }
 
     setVerdict(finalVerdict);
@@ -195,19 +157,15 @@ function App() {
 
     setShowResults(true);
     setIsScanning(false);
-  }, [email, message, activeCategory]);
+  }, [email, message]);
 
   return (
     <div className="app-container">
-      <Sidebar
-        activeCategory={activeCategory}
-        onCategoryChange={handleCategoryChange}
-        aiStats={aiStats}
-      />
+      <Sidebar aiStats={aiStats} />
 
       <main className="app-content">
         <div className="dashboard-header">
-          <h1>{CATEGORY_TITLES[activeCategory] || 'Phishing Verification Console'}</h1>
+          <h1>ScamScan — Phishing Verification Console</h1>
           <p>
             Evaluate emails, messages, and alerts with AI classification, domain verification, and web search.
           </p>
@@ -221,7 +179,6 @@ function App() {
               setEmail={setEmail}
               message={message}
               setMessage={setMessage}
-              activeCategory={activeCategory}
               onScan={handleScan}
               isScanning={isScanning}
             />
@@ -241,7 +198,6 @@ function App() {
               webSearchResults={webSearchResults}
               safeBrowsingLink={safeBrowsingLink}
               actionText={actionText}
-              activeCategory={activeCategory}
             />
           </div>
         </div>

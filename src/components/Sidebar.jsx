@@ -1,11 +1,6 @@
-function Sidebar({ activeCategory, onCategoryChange, aiStats }) {
-  const categories = [
-    { key: 'scholarship', label: 'Scholarships', icon: '🎓' },
-    { key: 'fees', label: 'Tuition Fees', icon: '💳' },
-    { key: 'placements', label: 'Placements/Jobs', icon: '💼' },
-    { key: 'competitions', label: 'Competitions', icon: '🏆' },
-  ];
+import React from 'react';
 
+function Sidebar({ aiStats }) {
   return (
     <aside className="sidebar">
       <div className="logo-wrap">
@@ -16,20 +11,13 @@ function Sidebar({ activeCategory, onCategoryChange, aiStats }) {
         </div>
       </div>
 
-      <div>
-        <div className="menu-title">Student Use Cases</div>
-        <ul className="nav-list">
-          {categories.map((cat) => (
-            <li key={cat.key}>
-              <button
-                className={activeCategory === cat.key ? 'nav-btn active' : 'nav-btn'}
-                onClick={() => onCategoryChange(cat.key)}
-              >
-                {cat.icon} {cat.label}
-              </button>
-            </li>
-          ))}
-        </ul>
+      <div style={{ flex: 1 }}>
+        <div className="menu-title" style={{ marginBottom: '16px', lineHeight: '1.5' }}>
+          Welcome to ScamScan
+        </div>
+        <p style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: '1.6' }}>
+          This intelligent assistant performs multi-layered scanning using local machine learning, heuristic rules, trusted registry validation, and malicious domain lookups.
+        </p>
       </div>
 
       <div className="ai-stats-widget">
