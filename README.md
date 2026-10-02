@@ -1,4 +1,4 @@
-# 🛡️ ScamScan — AI-Powered Phishing Detector & Cyber Defense Console
+# 🛡️ ScamScan - AI-Powered Phishing Detector & Cyber Defense Console
 
 An intelligent, multi-layered phishing detection web application built for students, academic institutions, and modern organizations. Designed and developed for the **AI + Cyber Defense** initiative at **TCS Tech Day @ Vidyavardhini College of Engineering & Technology (VCET)**.
 
