@@ -14,18 +14,32 @@ const URLHAUS_API = 'https://urlhaus-api.abuse.ch/v1/url/';
  */
 export async function checkUrlReputation(url) {
   try {
+    const authKey = import.meta.env?.VITE_URLHAUS_AUTH_KEY || '';
+    const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+    if (authKey) {
+      headers['Auth-Key'] = authKey;
+    }
+
     const res = await fetch(URLHAUS_API, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers,
       body: `url=${encodeURIComponent(url)}`,
     });
+
+    if (res.status === 401) {
+      return {
+        url,
+        status: 'no_key',
+        message: 'abuse.ch requires free Auth-Key (Check via Google Safe Browsing below)'
+      };
+    }
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const data = await res.json();
 
     if (data.query_status === 'no_results') {
-      return { url, status: 'not_found', message: 'Not found in abuse database' };
+      return { url, status: 'not_found', message: 'Not found in abuse database (Clear)' };
     }
 
     return {
@@ -36,7 +50,7 @@ export async function checkUrlReputation(url) {
       message: `FLAGGED — Reported as ${data.threat || 'malicious'}`,
     };
   } catch {
-    return { url, status: 'offline', message: 'Web lookup unavailable (offline mode)' };
+    return { url, status: 'offline', message: 'Web lookup unavailable (Offline mode)' };
   }
 }
 

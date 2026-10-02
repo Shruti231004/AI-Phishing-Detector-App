@@ -36,12 +36,11 @@ export const RULES = [
     id: 'authority',
     name: 'Fake Authority / Impersonation',
     points: 2,
-    why: 'Claiming to be from college admin or bank officials builds false trust. Always verify the sender address.',
+    why: 'Claiming to be from an official committee or government body in unsolicited messages builds false trust.',
     patterns: [
-      'scholarship committee', 'official notice', 'government of india', 'bank of',
-      'official communication', 'college administration', 'university office',
+      'scholarship committee', 'official notice', 'government of india',
       'cyber cell notice', 'tax department', 'official scholarship portal',
-      'placement cell', 'accounts department', 'dean office',
+      'income tax department', 'university portal'
     ],
   },
   {
@@ -59,11 +58,11 @@ export const RULES = [
     id: 'payment',
     name: 'Payment / Money Demand',
     points: 3,
-    why: 'Genuine scholarships, placements, and college services are free. Fee demands via UPI or links are scams.',
+    why: 'Genuine scholarships, placements, and college services do not demand payments or transfers via personal handles or quick links.',
     patterns: [
-      'pay ₹', 'pay rs', 'pay now', 'processing fee', 'deposit',
+      'pay ₹', 'pay rs', 'pay now', 'processing fee', 'deposit ₹', 'deposit rs',
       'fine of', 'penalty', 'transfer money', 'transfer funds',
-      'registration fee', '₹', 'service charge', 'security deposit',
+      'registration fee', 'service charge', 'security deposit',
     ],
   },
   {
@@ -203,12 +202,32 @@ export function runRulesEngine(text, email) {
     });
   }
 
-  // Keyword rules
+  // Negation prefixes indicating a safety warning rather than a phishing demand
+  const NEGATION_PATTERNS = [
+    'do not share', 'dont share', "don't share", 'never share',
+    'never disclose', 'do not disclose', 'beware of', 'warning never',
+    'will never ask', 'never ask', 'do not click', 'avoid clicking',
+    'no fee is charged', 'no fee', 'no registration fee'
+  ];
+
+  // Keyword rules with context check
   RULES.forEach((rule) => {
     const matched = [];
     rule.patterns.forEach((p) => {
-      if (lowerBody.includes(p)) matched.push(p);
+      let startIndex = 0;
+      while ((startIndex = lowerBody.indexOf(p, startIndex)) !== -1) {
+        // Look back up to 45 characters to see if this occurrence is preceded by a safety negation
+        const contextWindow = lowerBody.slice(Math.max(0, startIndex - 45), startIndex + p.length);
+        const isNegated = NEGATION_PATTERNS.some((neg) => contextWindow.includes(neg));
+
+        if (!isNegated) {
+          if (!matched.includes(p)) matched.push(p);
+          break;
+        }
+        startIndex += p.length;
+      }
     });
+
     if (matched.length > 0) {
       const contribution = Math.min(rule.points * matched.length, rule.points * 2);
       score += contribution;

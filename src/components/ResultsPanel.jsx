@@ -34,6 +34,7 @@ function ResultsPanel({
   const statusIcon = (status) => {
     if (status === 'not_found') return '🟢';
     if (status === 'flagged') return '🔴';
+    if (status === 'no_key') return '🔑';
     return '⚪';
   };
 

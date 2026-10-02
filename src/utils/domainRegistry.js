@@ -5,7 +5,11 @@
  */
 
 export const TRUSTED_DOMAINS = [
-  { org: 'Vidyavardhini College (VCET)', keywords: ['vidyavardhini', 'vcet', 'vvcoe'], domains: ['vcet.edu.in'] },
+  {
+    org: 'Vidyavardhini College (VCET)',
+    keywords: ['vidyavardhini', 'vcet', 'vvcoe', 'svvce', 'college'],
+    domains: ['vcet.edu.in', 'vvcoe.ac.in']
+  },
   { org: 'TCS', keywords: ['tcs', 'tata consultancy'], domains: ['tcs.com'] },
   { org: 'Infosys', keywords: ['infosys'], domains: ['infosys.com'] },
   { org: 'Wipro', keywords: ['wipro'], domains: ['wipro.com'] },
